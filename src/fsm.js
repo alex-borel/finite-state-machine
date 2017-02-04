@@ -1,61 +1,79 @@
 class FSM {
-    /**
-     * Creates new FSM instance.
-     * @param config
-     */
-    constructor(config) {}
 
-    /**
-     * Returns active state.
-     * @returns {String}
-     */
-    getState() {}
+    constructor(config) {
+        if (config) {
+            this.config = config;
+            this.initial = config.initial;
+            this.conditions = [this.initial];
+        } else {
+            throw new Error("Config isn't passed");
+        }
+    }
 
-    /**
-     * Goes to specified state.
-     * @param state
-     */
-    changeState(state) {}
+    getState() {
+        return this.initial;
+    }
 
-    /**
-     * Changes state according to event transition rules.
-     * @param event
-     */
-    trigger(event) {}
+    changeState(state) {
+        if (this.config.states.hasOwnProperty(state)) {
+            this.initial = state;
+            this.conditions.push(this.initial);
+        } else {
+            throw new Error("State isn't exist");
+        }
+    }
 
-    /**
-     * Resets FSM state to initial.
-     */
-    reset() {}
+    trigger(event) {
+        if (this.config.states[this.initial].transitions.hasOwnProperty(event)) {
+            this.initial = this.config.states[this.initial].transitions[event];
+            this.conditions.push(this.initial);
+        } else {
+            throw new Error("Event isn't exist");
+        }
+    }
 
-    /**
-     * Returns an array of states for which there are specified event transition rules.
-     * Returns all states if argument is undefined.
-     * @param event
-     * @returns {Array}
-     */
-    getStates(event) {}
+    reset() {
+        this.initial = "normal";
+    }
 
-    /**
-     * Goes back to previous state.
-     * Returns false if undo is not available.
-     * @returns {Boolean}
-     */
-    undo() {}
+    getStates(event) {
+        this.states = [];
+        if (!event) {
+            for (var key in this.config.states) {
+                this.states.push(key);
+            }
+            return this.states;
+        }
 
-    /**
-     * Goes redo to state.
-     * Returns false if redo is not available.
-     * @returns {Boolean}
-     */
-    redo() {}
+        for (var key in this.config.states) {
+            if (this.config.states[key].transitions.hasOwnProperty(event)) {
+                this.states.push(key);
+            }
 
-    /**
-     * Clears transition history
-     */
-    clearHistory() {}
+        }
+        return this.states;
+    }
+
+    undo() {
+        if (this.initial === this.conditions[0]) {
+            return false;
+        } else {
+            this.initial = this.conditions[this.conditions.length - 2];
+            return true;
+        }
+    }
+
+    redo() {
+        if (this.initial === this.conditions[0]) {
+            return false;
+        } else {
+            this.initial = this.conditions[this.conditions.length - 1];
+        }
+    }
+
+    clearHistory() {
+        this.initial = this.conditions[0];
+    }
 }
 
 module.exports = FSM;
-
-/** @Created by Uladzimir Halushka **/
