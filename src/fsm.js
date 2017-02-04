@@ -67,6 +67,7 @@ class FSM {
         if (this.initial === this.conditions[0]) {
             return false;
         } else {
+           this.conditions.pop();
             this.initial = this.conditions[this.conditions.length - 1];
         }
     }
