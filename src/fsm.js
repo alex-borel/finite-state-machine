@@ -1,39 +1,43 @@
 class FSM {
 
     constructor(config) {
-        if (config) {
+        if (!!config) {
             this.config = config;
-            this.initial = config.initial;
-            this.conditions = [this.initial];
+            this.currentState = config.initial;
+            this.history = [];
+            this.undoHistory = [];
         } else {
             throw new Error("Config isn't passed");
         }
     }
 
     getState() {
-        return this.initial;
+        return this.currentState;
     }
 
     changeState(state) {
         if (this.config.states.hasOwnProperty(state)) {
-            this.initial = state;
-            this.conditions.push(this.initial);
+            this.history.push(this.currentState);
+            this.undoHistory = [];
+            this.currentState = state;
         } else {
             throw new Error("State isn't exist");
         }
     }
 
     trigger(event) {
-        if (this.config.states[this.initial].transitions.hasOwnProperty(event)) {
-            this.initial = this.config.states[this.initial].transitions[event];
-            this.conditions.push(this.initial);
+        if (this.config.states[this.currentState].transitions.hasOwnProperty(event)) {
+            this.history.push(this.currentState);
+            this.undoHistory = [];
+            this.currentState = this.config.states[this.currentState].transitions[event];
         } else {
             throw new Error("Event isn't exist");
         }
     }
 
     reset() {
-        this.initial = "normal";
+        this.currentState = this.config.initial;
+        this.history = [];
     }
 
     getStates(event) {
@@ -44,7 +48,7 @@ class FSM {
             }
             return this.states;
         }
-
+        
         for (var key in this.config.states) {
             if (this.config.states[key].transitions.hasOwnProperty(event)) {
                 this.states.push(key);
@@ -55,25 +59,28 @@ class FSM {
     }
 
     undo() {
-        if (this.initial === this.conditions[0]) {
+        if (this.history.length === 0) {
             return false;
         } else {
-            this.initial = this.conditions[this.conditions.length - 2];
+            this.undoHistory.push(this.currentState);
+            this.currentState = this.history.pop();
             return true;
         }
     }
 
     redo() {
-        if (this.initial === this.conditions[0]) {
+        if (this.undoHistory.length === 0) {
             return false;
         } else {
-           this.conditions.pop();
-            this.initial = this.conditions[this.conditions.length - 1];
+            this.history.push(this.currentState);
+            this.currentState = this.undoHistory.pop();
+            return true;
         }
     }
 
     clearHistory() {
-        this.initial = this.conditions[0];
+        this.history = [];
+        this.undoHistory = [];
     }
 }
 
